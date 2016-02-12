@@ -101,3 +101,4 @@ los_angeles_raw.db: PARCELS2015.shp
 la.zip: 
 	curl -GL -d method=export -d format=Original \
 	    https://data.lacounty.gov/api/geospatial/52g2-xk3i > $@
+
