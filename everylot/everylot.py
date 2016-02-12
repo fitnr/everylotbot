@@ -21,7 +21,7 @@ from io import BytesIO
 import requests
 
 QUERY = """SELECT
-    * 
+    *
     FROM lots
     where {} = ?
     ORDER BY id ASC

@@ -1,25 +1,3 @@
-# Borough    # SPDist2      # AreaSource  # YearAlter1
-# Block      # LtdHeight    # NumBldgs    # YearAlter2
-# Lot        # AllZoning1   # NumFloors   # HistDist
-# CD         # AllZoning2   # UnitsRes    # Landmark
-# CT2010     # SplitZone    # UnitsTotal  # BuiltFAR
-# CB2010     # BldgClass    # LotFront    # ResidFAR
-# SchoolDist # LandUse      # LotDepth    # CommFAR
-# Council    # Easements    # BldgFront   # FacilFAR
-# ZipCode    # OwnerType    # BldgDepth   # BoroCode
-# FireComp   # OwnerName    # Ext         # BBL
-# PolicePrct # LotArea      # ProxCode    # CondoNo
-# HealthArea # BldgArea     # IrrLotCode  # Tract2010
-# Address    # ComArea      # LotType     # XCoord
-# ZoneDist1  # ResArea      # BsmtCode    # YCoord
-# ZoneDist2  # OfficeArea   # AssessLand  # ZoneMap
-# ZoneDist3  # RetailArea   # AssessTot   # ZMCode
-# ZoneDist4  # GarageArea   # ExemptLand  # Sanborn
-# Overlay1   # StrgeArea    # ExemptTot   # TaxMap
-# Overlay2   # FactryArea   # YearBuilt   # EDesigNum
-# SPDist1    # OtherArea    # BuiltCode   # APPBBL
-# APPDate    # PLUTOMapID   # Version
-
 VERSION = 15v1
 
 PLUTO_FIELDS = BBL,Address,BoroCode,ZipCode,NumFloors
