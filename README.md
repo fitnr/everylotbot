@@ -51,12 +51,21 @@ Parcels_2015.dbf Parcels_2015.prj Parcels_2015.shp Parcels_2015.shx Parcels_2015
 
 While you're at it, make sure to download the metadata and carefully note the fields you'll want to track. At a minimum, you'll need an ID field and an address field. The address may be broken into several parts, that's fine. A field that tracts the number of floors would be nice, too.
 
-Now, you'll need to transform that Shapefile into an SQLite database. If you are a GIS expert, you may find it easy to open up your favorite GIS and go nuts. 
+Your goal should be to create CSV with these fields: `id`, `address`, `lat`, `lon`, `tweeted` (the last should just be empty). Optionally, a `floors` field is useful for pointing the Streetview camera.
+
+Convert that CSV to SQLite with one step:
+````
+sqlite3 lots.db "import 'stdin' lots" < lots.csv
+````
+
+#### Using GDAL/OGR to create the property database
+
+Now, you'll need to transform that Shapefile into an SQLite database. If you are a GIS expert, you may find it easy to open up your favorite QGIS or ArcGIS and go nuts. 
 
 If you're on OS X and don't have a GIS handy, install [Homebrew](http://brew.sh). Then, paying attention to the fields you noted, do something like this:
 
 ````
-# this will take a while, you're installing a big software library
+# this may take a while, you're installing a big software library
 brew install gdal
 
 # Convert the layer to Google's projection and filter the fields
@@ -70,10 +79,6 @@ ogr2ogr -f SQLite lots.db Parcels_2015_4326.db -nln lots \
         FROM Parcels_2015_4326 ORDER BY taxid ASC"
 ````
 
-If the above is impentrable, you can convert a CSV to SQLite with one step:
-````
-sqlite3 lots.db "import 'stdin' lots" < lots.csv
-````
 
 ### A place for your bot to live
 
@@ -91,6 +96,7 @@ If this is a Linux machine, you can do this with crontab:
 ```
 crontab -e
 1,31 * * * * $HOME/.local/bin/everylotbot twitter_screen_name $HOME/path/to/lots.db -s '{address} Anytown USA'
+```
 
 ### Walkthrough for Baltimore
 
