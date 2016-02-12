@@ -69,7 +69,10 @@ class EveryLot(object):
     def aim_camera(self):
         '''Set field-of-view and pitch'''
         fov, pitch = 65, 10
-        floors = float(self.lot.get('floors', 0)) or 2
+        try:
+            floors = float(self.lot.get('floors', 0)) or 2
+        except TypeError:
+            floors = 2
 
         if floors == 3:
             fov = 72
