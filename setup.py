@@ -17,7 +17,7 @@ setup(
     license='GPL-3.0',
     include_package_data=False,
     install_requires=[
-        'twitter_bot_utils<=0.10',
+        'twitter_bot_utils<=0.10.4',
     ],
     entry_points={
         'console_scripts': [
