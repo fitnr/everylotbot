@@ -1,10 +1,11 @@
 # every lot bot
 
-This bot tweets Google Streetview pictures of every property in a city. Really, it tweets Streetview photos of every property in a SQLite database.
+This library supports a Twitter bot that posts Google Streetview pictures of every property in an SQLite database. 
+Existing instances of the bot: <a href="https://twitter.com/everylotnyc">@everylotnyc</a>, <a href="https://twitter.com/everylotchicago">@everylotchicago</a>, <a href="https://twitter.com/everylotsf">@everylotsf</a> and <a href="https://twitter.com/everylotla">@everylotla</a>. Since maps are instruments of power, these bots is a way of generating a tension between two different modes establishing power in urban space.
 
 ## What you'll need
 
-Set up will be easier with at least a basic familiarity with the command line. A knowledge of GIS may be helpful.
+Set up will be easier with at least a basic familiarity with the command line. A knowledge of GIS will be helpful.
 
 * A fresh Twitter account and a Twitter app, with registered keys
 * A Google Streetview API token.
@@ -100,6 +101,8 @@ crontab -e
 
 ### Walkthrough for Baltimore
 
+This walks through the steps of creating an example bot. It uses text-based command line commands, but most of these tasks could be done in programs with graphic interfaces.
+
 First step is to find the bata: google "Baltimore open data", search for parcels on [data.baltimorecity.gov](https://data.baltimorecity.gov).
 
 ````bash
@@ -127,22 +130,23 @@ parcelnum: String (254.0)
 blocknum: String (254.0)
 fulladdr: String (254.0)
 ...
-# Convert to WGS84, only using the desired fields
-> ogr2ogr -f SQLite baltimore_raw.db baltimore.shp baltimore -t_srs EPSG:4326 \
+# Create an SQLite database, reprojecting the geometries to WGS84. Keep only the desired fields
+> ogr2ogr -f SQLite baltimore_raw.db baltimore.shp baltimore -t_srs EPSG:4326 
     -nln baltimore -select parcelnum,blocknum,fulladdr
 
 # Convert feature centroid to integer latitude, longitude
-# Pad the block number and parcel number so make sorting work better
-# http://stackoverflow.com/questions/6134415/how-to-concatenate-strings-with-padding-in-sqlite
-> ogr2ogr -f SQLite baltimore.db baltimore_raw.db -nln lots -dialect sqlite \
-    -sql "SELECT (substr('00000' || blocknum, -5, 5)) || \
-    (substr('000000000' || parcelnum, -9, 9)) AS id, \
-    fulladdr AS address, \
-    ROUND(X(ST_Centroid(GeomFromWKB(Geometry))), 5) lon, \
-    ROUND(Y(ST_Centroid(GeomFromWKB(Geometry))), 5) lat, \
-    0 tweeted FROM baltimore WHERE blocknum IS NOT NULL AND parcelnum IS NOT NULL;"
+# Pad the block number and parcel number so sorting works
+# Result will have these columns: id, address, lon, lat, tweeted
+> ogr2ogr -f SQLite baltimore.db baltimore_raw.db -nln lots -dialect sqlite
+    -sql "SELECT (substr('00000' || blocknum, -5, 5)) ||
+    (substr('000000000' || parcelnum, -9, 9)) AS id,
+    fulladdr AS address,
+    ROUND(X(ST_Centroid(GeomFromWKB(Geometry))), 5) lon,
+    ROUND(Y(ST_Centroid(GeomFromWKB(Geometry))), 5) lat,
+    0 tweeted
+    FROM baltimore WHERE blocknum IS NOT NULL AND parcelnum IS NOT NULL;"
 
-# add indexes and clean up sqlite database
+# Add indexes and clean up sqlite database.
 > sqlite3 baltimore.db "CREATE INDEX i ON lots (id);"
 > sqlite3 baltimore.db "DELETE FROM lots WHERE id = '' OR id IS NULL;"
 > sqlite3 baltimore.db "DROP TABLE geometry_columns; DROP TABLE spatial_ref_sys; VACUUM;"
