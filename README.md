@@ -1,7 +1,7 @@
 # every lot bot
 
 This library supports a Twitter bot that posts Google Streetview pictures of every property in an SQLite database. 
-Existing instances of the bot: <a href="https://twitter.com/everylotnyc">@everylotnyc</a>, <a href="https://twitter.com/everylotchicago">@everylotchicago</a>, <a href="https://twitter.com/everylotsf">@everylotsf</a> and <a href="https://twitter.com/everylotla">@everylotla</a>. Since maps are instruments of power, these bots is a way of generating a tension between two different modes establishing power in urban space.
+Existing instances of the bot: <a href="https://twitter.com/everylotnyc">@everylotnyc</a>, <a href="https://twitter.com/everylotchicago">@everylotchicago</a>, <a href="https://twitter.com/everylotsf">@everylotsf</a> and <a href="https://twitter.com/everylotla">@everylotla</a>. Since maps are instruments of power, these bots is a way of generating a tension between two different modes establishing power in urban space. [Read more about that](http://fakeisthenewreal.org/everylot/).
 
 ## What you'll need
 
@@ -80,7 +80,6 @@ ogr2ogr -f SQLite lots.db Parcels_2015_4326.db -nln lots \
         FROM Parcels_2015_4326 ORDER BY taxid ASC"
 ````
 
-
 ### A place for your bot to live
 
 Now, you just need a place for the bot to live. This needs to be a computer that's always connected to the internet, and that you can set up to run tasks for you.
@@ -150,5 +149,13 @@ fulladdr: String (254.0)
 > sqlite3 baltimore.db "CREATE INDEX i ON lots (id);"
 > sqlite3 baltimore.db "DELETE FROM lots WHERE id = '' OR id IS NULL;"
 > sqlite3 baltimore.db "DROP TABLE geometry_columns; DROP TABLE spatial_ref_sys; VACUUM;"
+
+# download the repo and install it
+> git clone git@github.com:fitnr/everylotbot.git
+> cd everylotbot; python setup.py install
+
+# 'search_format' controls how address will be used to search google.
+# 'print_format' controls how the address will be printed in the tweet
+
 > everylot everylotbaltimore baltimore.db --search_format "{address}, Baltimore, MD" --print_format "{address}"
 ````
