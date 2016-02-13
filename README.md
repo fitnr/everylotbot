@@ -16,21 +16,23 @@ Set up will be easier with at least a basic familiarity with the command line. A
 
 Creating Twitter account should be straightforward. To create a Twitter app, register at [apps.twitter.com/](http://apps.twitter.com/). Once you have an app, you'll need to register your account with the app. [Twitter has details](https://dev.twitter.com/oauth/overview/application-owner-access-tokens).
 
-Once you have the keys, save them in a file called `bots.yaml` in this format:
+Once you have the keys, save them in a file called `bots.yaml` that looks like this:
 
 ```yaml
 apps:
-    example_app_name:
+    everylot:
         consumer_key: 123456890123456890
         consumer_secret: 123456890123456890123456890123456890
 users:
     example_user_name:
         key: 123456890123456890-123456890123456890123456890123456890
         secret: 1234568901234568901234568901234568901234568
-        app: example_app_name
+        app: everylot
 ```
 
-Change `example_user_name` to your Twitter account screen name, and each `example_user_name` to a nickname for your app.
+Change `example_user_name` to your Twitter account screen name. The app name can also be anything you want.
+
+This file can be in `json` format, if you wish.
 
 ### Streetview key
 
@@ -59,6 +61,11 @@ One way to create a CSV like this is using GDAL command line tools. Or, you can 
 Convert that CSV to SQLite with one step:
 ````
 sqlite3 lots.db "import 'stdin' lots" < lots.csv
+````
+
+Add an index unless you have a very small database or lots of spare time:
+````
+sqlite3 lots.db "CREATE INDEX i ON lots (id);"
 ````
 
 #### Using GDAL/OGR to create the property database
@@ -103,8 +110,10 @@ It will check where Google thinks this address is, and make sure it's close to t
 `everylot` will, by default, try to use `address`, `city` and `state` fields from the database to search Google, then post to Twitter just the `address` field.
 
 You can customize this based on the lay out of your database and the results you want. `everylot` has two options just for this:
-* '--search-format' controls how address will be generated when searching Google
-* '--print-format' controls how the address will be printed in the tweet
+* `--search-format` controls how address will be generated when searching Google
+* `--print-format` controls how the address will be printed in the tweet
+
+The default `search-format` is `{address}, {city}, {state}`, and the default `print-format` is `{address}`.
 
 Search Google using the `address` field and the knowledge that all our data is in Kalamazoo, Michigan:
 ````
@@ -145,8 +154,10 @@ Put the `bots.yaml` file and your database in the same folder on your server, th
 Next, you want to set up the bot to tweet regularly. If this is a Linux machine, you can do this with crontab:
 ```
 crontab -e
-1,31 * * * * $HOME/.local/bin/everylot twitter_screen_name $HOME/path/to/lots.db -s '{address} Anytown USA'
+1,31 * * * * $HOME/.local/bin/everylot screen_name $HOME/path/to/lots.db -s '{address} Anytown USA'
 ```
+
+(Note that you can omit the `bots.yaml` config file argument if it's located in the home directory.)
 
 ### Walkthrough for Baltimore
 
@@ -169,7 +180,8 @@ Archive:  baltimore.zip
 > mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.shx baltimore.shx
 > mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.dbf baltimore.dbf
 
-# Find the address field
+# Find the address and ID fields. It looks like we'll want to use a combination of
+# blocknum and parcelnum to get a unique ID for each property
 > ogrinfo baltimore.shp baltimore -so
 INFO: Open of `baltimore.shp'
       using driver `ESRI Shapefile' successful.
@@ -179,6 +191,7 @@ parcelnum: String (254.0)
 blocknum: String (254.0)
 fulladdr: String (254.0)
 ...
+
 # Create an SQLite database, reprojecting the geometries to WGS84. Keep only the desired fields
 > ogr2ogr -f SQLite baltimore_raw.db baltimore.shp baltimore -t_srs EPSG:4326 
     -nln baltimore -select parcelnum,blocknum,fulladdr
@@ -200,5 +213,5 @@ fulladdr: String (254.0)
 > sqlite3 baltimore.db "DELETE FROM lots WHERE id = '' OR id IS NULL;"
 > sqlite3 baltimore.db "DROP TABLE geometry_columns; DROP TABLE spatial_ref_sys; VACUUM;"
 
-> everylot everylotbaltimore baltimore.db --search-format "{address}, Baltimore, MD" --print-format "{address}"
+> everylot everylotbaltimore baltimore.db --search-format "{address}, Baltimore, MD"
 ````
