@@ -27,8 +27,10 @@ def main():
     parser.add_argument('user', type=str)
     parser.add_argument('database', type=str)
     parser.add_argument('--id', type=str, default=None)
-    parser.add_argument('-s', '--search_format', type=str, default=None)
-    parser.add_argument('-p', '--print_format', type=str, default=None)
+    parser.add_argument('-s', '--search-format', type=str, default=None,
+                        help='Python format string use for searching Google')
+    parser.add_argument('-p', '--print-format', type=str, default=None,
+                        help='Python format string use for poster to Twitter')
 
     args = parser.parse_args()
 

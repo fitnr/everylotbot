@@ -52,7 +52,9 @@ Parcels_2015.dbf Parcels_2015.prj Parcels_2015.shp Parcels_2015.shx Parcels_2015
 
 While you're at it, make sure to download the metadata and carefully note the fields you'll want to track. At a minimum, you'll need an ID field and an address field. The address may be broken into several parts, that's fine. A field that tracts the number of floors would be nice, too.
 
-Your goal should be to create CSV with these fields: `id`, `address`, `lat`, `lon`, `tweeted` (the last should just be empty). Optionally, a `floors` field is useful for pointing the Streetview camera.
+Your goal is to create CSV with these fields: `id`, `lat`, `lon`, `tweeted` (the last should just be empty). You must also have some fields that represent the address, like `address`, `city` and `state`. Or, you might have `address_number`, `street_name` and `city`. Optionally, a `floors` field is useful for pointing the Streetview "camera". 
+
+One way to create a CSV like this is using GDAL command line tools. Or, you can use a GIS like QGIS or ArcGIS.
 
 Convert that CSV to SQLite with one step:
 ````
@@ -80,29 +82,77 @@ ogr2ogr -f SQLite lots.db Parcels_2015_4326.db -nln lots \
         FROM Parcels_2015_4326 ORDER BY taxid ASC"
 ````
 
+### Test the bot
+
+Install this repository:
+````
+> git clone git@github.com:fitnr/everylotbot.git
+> cd everylotbot
+````
+
+For this step, make your new Twitter private.
+
+You'll now have a command available called `everylot`. It works like this:
+```
+everylot SCREEN_NAME DATABASE.db --config bots.yaml
+```
+
+This will look in `DATABASE.db` for a table called lots, then sort that table by `id` and grab the first untweeted row. 
+It will check where Google thinks this address is, and make sure it's close to the coordinates in the table. Then it wil use the address (or the coordinates, if they seem more reliable) to find a Streetview image, then post a tweet with this image to `SCREEN_NAME`'s timeline. It will need the authorization keys in `bots.yaml` to do all this stuff.
+
+`everylot` will, by default, try to use `address`, `city` and `state` fields from the database to search Google, then post to Twitter just the `address` field.
+
+You can customize this based on the lay out of your database and the results you want. `everylot` has two options just for this:
+* '--search-format' controls how address will be generated when searching Google
+* '--print-format' controls how the address will be printed in the tweet
+
+Search Google using the `address` field and the knowledge that all our data is in Kalamazoo, Michigan:
+````
+everylot everylotkalamazoo ./kalamazoo.db --config ./bots.yaml --search-format '{address}, Kalamazoo, MI'
+````
+
+Search Google using an address broken-up into several fields:
+````
+everylot everylotwallawalla walla2.db --config bots.yaml \
+    --search-format '{address_number} {street_direction} {street_name} {street_suffix}, Walla Walla, WA'
+````
+
+In practice, you want to do the same thing when posting to Twitter, but you leave off the city and state because that's obvious to your followers:
+````
+everylot everylotwallawalla walla2.db --config bots.yaml \
+    --search-format '{address_number} {street_direction} {street_name} {street_suffix}, Walla Walla, WA' \
+    --print-format '{address_number} {street_direction} {street_name} {street_suffix}'
+````
+
+Include the property ID in the tweet, in brackets:
+````
+everylot everylotkalamazoo kalamazoo.db --config bots.yaml --search-format '{address}, Kalamazoo, MI \
+    --print-format '{address} [{id}]'
+````
+
+While you're testing, it might be helpful to use the `--verbose` and `--dry-run` options. Also, use the `--id` option to force `everylot` to post a particular property.
+
+````
+everylot everylotpoughkeepsie pkpse.db --config bots.json --verbose --dry-run --id 12345
+```
+
 ### A place for your bot to live
 
-Now, you just need a place for the bot to live. This needs to be a computer that's always connected to the internet, and that you can set up to run tasks for you.
+Now, you just need a place for the bot to live. This needs to be a computer that's always connected to the internet, and that you can set up to run tasks for you. You could use a virtual server hosted at a vendor like Amazon AWS, Linode or DigitalOcean, or space on a web server.
 
-Put the `bots.yaml` file and your database in the same folder on the computer, then download this repository and install it:
-```
-python setup.py install
-mkdir ~/logs
-```
+Put the `bots.yaml` file and your database in the same folder on your server, then download this repository and install it as above.
 
-(`everylotbot` automatically creates a log in ~/logs)
-
-If this is a Linux machine, you can do this with crontab:
+Next, you want to set up the bot to tweet regularly. If this is a Linux machine, you can do this with crontab:
 ```
 crontab -e
-1,31 * * * * $HOME/.local/bin/everylotbot twitter_screen_name $HOME/path/to/lots.db -s '{address} Anytown USA'
+1,31 * * * * $HOME/.local/bin/everylot twitter_screen_name $HOME/path/to/lots.db -s '{address} Anytown USA'
 ```
 
 ### Walkthrough for Baltimore
 
 This walks through the steps of creating an example bot. It uses text-based command line commands, but most of these tasks could be done in programs with graphic interfaces.
 
-First step is to find the bata: google "Baltimore open data", search for parcels on [data.baltimorecity.gov](https://data.baltimorecity.gov).
+First step is to find the data: google "Baltimore open data", search for parcels on [data.baltimorecity.gov](https://data.baltimorecity.gov).
 
 ````bash
 > curl -G https://data.baltimorecity.gov/api/geospatial/rb22-mgti \
@@ -150,12 +200,5 @@ fulladdr: String (254.0)
 > sqlite3 baltimore.db "DELETE FROM lots WHERE id = '' OR id IS NULL;"
 > sqlite3 baltimore.db "DROP TABLE geometry_columns; DROP TABLE spatial_ref_sys; VACUUM;"
 
-# download the repo and install it
-> git clone git@github.com:fitnr/everylotbot.git
-> cd everylotbot; python setup.py install
-
-# 'search_format' controls how address will be used to search google.
-# 'print_format' controls how the address will be printed in the tweet
-
-> everylot everylotbaltimore baltimore.db --search_format "{address}, Baltimore, MD" --print_format "{address}"
+> everylot everylotbaltimore baltimore.db --search-format "{address}, Baltimore, MD" --print-format "{address}"
 ````
