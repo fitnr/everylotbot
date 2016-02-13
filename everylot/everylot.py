@@ -119,23 +119,30 @@ class EveryLot(object):
         Check if google-geocoded address is nearby or not. if not, use the lat/lon
         '''
         # skip this step if there's no address, we'll just use the lat/lon to fetch the SV.
-        if self.lot.get('address') is None:
-            self.logger.debug('null address')
+        try:
+            address = self.search_format.format(**self.lot)
+
+        except KeyError:
+            self.logger.warn('Could not find street address, using lat/lon')
             return '{},{}'.format(self.lot['lat'], self.lot['lon'])
 
-        address = self.search_format.format(**self.lot)
+        # bounds in (miny minx maxy maxx) aka (s w n e)
+        try:
+            d = 0.007
+            minpt = self.lot['lat'] - d, self.lot['lon'] - d
+            maxpt = self.lot['lat'] + d, self.lot['lon'] + d
+
+        except KeyError:
+            self.logger.info('No lat/lon coordinates. Using address naively.')
+            return address
 
         params = {
             "address": address,
             "key": key,
         }
 
-        # bounds in (miny minx maxy maxx) aka (s w n e)
-        d = 0.007
-        minpt = self.lot['lat'] - d, self.lot['lon'] - d
-        maxpt = self.lot['lat'] + d, self.lot['lon'] + d
-
         self.logger.debug('geocoding @ google')
+
         try:
             r = requests.get(GCAPI, params=params)
             self.logger.debug(r.url)
@@ -176,8 +183,8 @@ class EveryLot(object):
 
         return {
             "status": status,
-            "lat": self.lot['lat'],
-            "long": self.lot['lon'],
+            "lat": self.lot.get('lat', 0.),
+            "long": self.lot.get('lon', 0.),
             "media_ids": [media_id_string]
         }
 
