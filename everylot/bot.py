@@ -15,16 +15,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-from time import sleep
+import logging
 import twitter_bot_utils as tbu
-from tweepy import TweepError
 from . import __version__ as version
 from .everylot import EveryLot
 
 
 def main():
-    parent = tbu.args.parent(version, config_only=True)
-    parser = argparse.ArgumentParser(description='every lot twitter bot', parents=(parent,))
+    parser = argparse.ArgumentParser(description='every lot twitter bot')
     parser.add_argument('user', type=str)
     parser.add_argument('database', type=str)
     parser.add_argument('--id', type=str, default=None)
@@ -32,13 +30,12 @@ def main():
                         help='Python format string use for searching Google')
     parser.add_argument('-p', '--print-format', type=str, default=None,
                         help='Python format string use for poster to Twitter')
+    tbu.args.add_default_args(parser, version=version, include=('config', 'dry-run', 'verbose', 'quiet'))
 
     args = parser.parse_args()
+    api = tbu.api.API(args)
 
-    api = tbu.api.API(args.user)
-
-    logger = tbu.args.add_logger(args.user, verbose=args.verbose)
-
+    logger = logging.getLogger(args.user)
     logger.debug('everylot starting with %s, %s', args.user, args.database)
 
     el = EveryLot(args.database,
@@ -64,17 +61,8 @@ def main():
     logger.info(update['status'])
 
     if not args.dry_run:
-        try:
-            logger.debug("posting")
-            api.update_status(**update)
-
-        except TweepError as e:
-            if e.message[0]['code'] == 503:
-                sleep(10)
-                api.update_status(**update)
-            else:
-                raise e
-
+        logger.debug("posting")
+        api.update_status(**update)
         el.mark_as_tweeted()
 
 
