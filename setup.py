@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# This file is part of everylotnyc.
+# This file is part of everylotbot
 
 from setuptools import setup
 
@@ -24,5 +24,4 @@ setup(
             'everylot=everylot.bot:main',
         ],
     },
-    test_suite='tests',
 )
