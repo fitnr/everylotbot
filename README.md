@@ -166,6 +166,7 @@ This walks through the steps of creating an example bot. It uses text-based comm
 First step is to find the data: google "Baltimore open data", search for parcels on [data.baltimorecity.gov](https://data.baltimorecity.gov).
 
 ````bash
+# Also works to download through the browser and unzip with the GUI
 > curl -G https://data.baltimorecity.gov/api/geospatial/rb22-mgti \
     -d method=export -d format=Shapefile -o baltimore.zip
 > unzip baltimore.zip
@@ -199,19 +200,24 @@ fulladdr: String (254.0)
 # Convert feature centroid to integer latitude, longitude
 # Pad the block number and parcel number so sorting works
 # Result will have these columns: id, address, lon, lat, tweeted
-> ogr2ogr -f SQLite baltimore.db baltimore_raw.db -nln lots -dialect sqlite
-    -sql "SELECT (substr('00000' || blocknum, -5, 5)) ||
-    (substr('000000000' || parcelnum, -9, 9)) AS id,
-    fulladdr AS address,
-    ROUND(X(ST_Centroid(GeomFromWKB(Geometry))), 5) lon,
-    ROUND(Y(ST_Centroid(GeomFromWKB(Geometry))), 5) lat,
+> ogr2ogr -f SQLite baltimore.db baltimore_raw.db -nln lots -nlt NONE -dialect sqlite
+    -sql "WITH A as (
+        SELECT blocknum,
+        parcelnum,
+        fulladdr AS address,
+        ST_Centroid(GeomFromWKB(Geometry)) centroid
+        FROM baltimore
+        WHERE blocknum IS NOT NULL AND parcelnum IS NOT NULL
+    ) SELECT (substr('00000' || blocknum, -5, 5)) || (substr('000000000' || parcelnum, -9, 9)) AS id,
+    address,
+    ROUND(X(centroid), 5) lon,
+    ROUND(Y(centroid), 5) lat,
     0 tweeted
-    FROM baltimore WHERE blocknum IS NOT NULL AND parcelnum IS NOT NULL;"
+    FROM A;"
 
 # Add indexes and clean up sqlite database.
 > sqlite3 baltimore.db "CREATE INDEX i ON lots (id);"
-> sqlite3 baltimore.db "DELETE FROM lots WHERE id = '' OR id IS NULL;"
-> sqlite3 baltimore.db "DROP TABLE geometry_columns; DROP TABLE spatial_ref_sys; VACUUM;"
+> sqlite3 baltimore.db "DELETE FROM lots WHERE id = '' OR id IS NULL; VACUUM"
 
 > everylot everylotbaltimore baltimore.db --search-format "{address}, Baltimore, MD"
 ````
