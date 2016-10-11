@@ -14,7 +14,7 @@ Set up will be easier with at least a basic familiarity with the command line. A
 
 ### Twitter keys
 
-Creating Twitter account should be straightforward. To create a Twitter app, register at [apps.twitter.com/](http://apps.twitter.com/). Once you have an app, you'll need to register your account with the app. [Twitter has details](https://dev.twitter.com/oauth/overview/application-owner-access-tokens).
+Creating a new Twitter account should be straightforward. To create a Twitter app, register at [apps.twitter.com/](http://apps.twitter.com/). Once you have an app, you'll need to register your account with the app. [Twitter has details](https://dev.twitter.com/oauth/overview/application-owner-access-tokens) on that process.
 
 Once you have the keys, save them in a file called `bots.yaml` that looks like this:
 
@@ -30,7 +30,7 @@ users:
         app: everylot
 ```
 
-Change `example_user_name` to your Twitter account screen name. The app name can also be anything you want.
+Change `example_user_name` to your Twitter account screen name. The app name can also be anything you want, but the name in the apps section must match the value of the users's `app` key.
 
 This file can be in `json` format, if you wish.
 
@@ -41,6 +41,8 @@ Visit the [Google Street View Image API](https://developers.google.com/maps/docu
 Once you have the key, save it on its own line in your `bots.yaml` file like so:
 ```yaml
 streetview: 123ABC123ABC123ABC123ABC
+apps: [etc]
+users: [etc]
 ```
 
 ### Address database
@@ -54,34 +56,23 @@ Parcels_2015.dbf Parcels_2015.prj Parcels_2015.shp Parcels_2015.shx Parcels_2015
 
 While you're at it, make sure to download the metadata and carefully note the fields you'll want to track. At a minimum, you'll need an ID field and an address field. The address may be broken into several parts, that's fine. A field that tracts the number of floors would be nice, too.
 
-Your goal is to create CSV with these fields: `id`, `lat`, `lon`, `tweeted` (the last should just be empty). You must also have some fields that represent the address, like `address`, `city` and `state`. Or, you might have `address_number`, `street_name` and `city`. Optionally, a `floors` field is useful for pointing the Streetview "camera". 
+Now, you'll need to transform that Shapefile into an SQLite database. The database should have a table named `lots` with these fields: `id`, `lat`, `lon`, `tweeted` (the last should just be empty). You must also have some fields that represent the address, like `address`, `city` and `state`. Or, you might have `address_number`, `street_name` and `city`. Optionally, a `floors` field is useful for pointing the Streetview "camera". 
 
-One way to create a CSV like this is using GDAL command line tools. Or, you can use a GIS like QGIS or ArcGIS.
-
-Convert that CSV to SQLite with one step:
-````
-sqlite3 lots.db "import 'stdin' lots" < lots.csv
-````
-
-Add an index unless you have a very small database or lots of spare time:
-````
-sqlite3 lots.db "CREATE INDEX i ON lots (id);"
-````
+(In the commands below, note that you don't have to type the "$", it's just there to mark the prompt where you enter the command.)
 
 #### Using GDAL/OGR to create the property database
 
-Now, you'll need to transform that Shapefile into an SQLite database. If you are a GIS expert, you may find it easy to open up your favorite QGIS or ArcGIS and go nuts. 
-
-If you're on OS X and don't have a GIS handy, install [Homebrew](http://brew.sh). Then, paying attention to the fields you noted, do something like this:
+One way to create a the SQLite database is with GDAL command line tools. If you're on OS X and don't have a GIS handy, install [Homebrew](http://brew.sh). Then, paying attention to the fields you noted, do something like this:
 
 ````
 # this may take a while, you're installing a big software library
-brew install gdal
+$ brew install gdal
 
-# Convert the layer to Google's projection and filter the fields
-ogr2ogr -f SQLite Parcels_2015_4326.db Parcels_2015.db -t_srs EPSG:4326 -select taxid,addr,floors
+# Convert the layer to Google's projection and remove unneeded columns.
+# Check the file carefully, its field names will differ from this example.
+$ ogr2ogr -f SQLite Parcels_2015_4326.db Parcels_2015.shp -t_srs EPSG:4326 -select taxid,addr,floors
 
-ogr2ogr -f SQLite lots.db Parcels_2015_4326.db -nln lots \
+$ ogr2ogr -f SQLite lots.db Parcels_2015_4326.db -nln lots \
     -sql "SELECT taxid AS id, addr AS address, floors, \
         ROUND(X(ST_Centroid(GeomFromWKB(Geometry))), 5) lon, \
         ROUND(Y(ST_Centroid(GeomFromWKB(Geometry))), 5) lat, \
@@ -89,31 +80,41 @@ ogr2ogr -f SQLite lots.db Parcels_2015_4326.db -nln lots \
         FROM Parcels_2015_4326 ORDER BY taxid ASC"
 ````
 
+If you don't want to install GDAL, you can use other command line tools (e.g. `mapshaper`) or a GIS like QGIS or ArcGIS to create a CSV and load it into SQLite:
+````
+# Convert a CSV (`lots.csv`) to SQLite with two steps
+$ sqlite3 -separator , lots.db "import 'stdin' tmp" < lots.csv
+$ sqlite lots.db "CREATE TABLE lots AS SELECT taxid AS id, CONVERT(lat, NUMERIC) AS lat,
+    CONVERT(lon, NUMERIC) AS lon, address, city, state, 0 AS tweeted FROM tmp;"
+````
+
+However you create the SQLite db, add an index (skip this step if have a very small database or like waiting for commands to run):
+````
+$ sqlite3 lots.db "CREATE INDEX i ON lots (id);"
+````
+
 ### Test the bot
 
-Install this repository:
+Install this repository. First download or clone the repo, and open the folder up in terminal. Then run:
 ````
-> git clone git@github.com:fitnr/everylotbot.git
-> cd everylotbot
+$ python setup.py install
 ````
-
-For this step, make your new Twitter private.
 
 You'll now have a command available called `everylot`. It works like this:
 ```
-everylot SCREEN_NAME DATABASE.db --config bots.yaml
+$ everylot SCREEN_NAME DATABASE.db --config bots.yaml
 ```
 
 This will look in `DATABASE.db` for a table called lots, then sort that table by `id` and grab the first untweeted row. 
 It will check where Google thinks this address is, and make sure it's close to the coordinates in the table. Then it wil use the address (or the coordinates, if they seem more reliable) to find a Streetview image, then post a tweet with this image to `SCREEN_NAME`'s timeline. It will need the authorization keys in `bots.yaml` to do all this stuff.
 
-`everylot` will, by default, try to use `address`, `city` and `state` fields from the database to search Google, then post to Twitter just the `address` field.
+`Everylot` will, by default, try to use `address`, `city` and `state` fields from the database to search Google, then post to Twitter just the `address` field.
 
 You can customize this based on the lay out of your database and the results you want. `everylot` has two options just for this:
 * `--search-format` controls how address will be generated when searching Google
 * `--print-format` controls how the address will be printed in the tweet
 
-The default `search-format` is `{address}, {city}, {state}`, and the default `print-format` is `{address}`.
+The format arguments are strings that refer to fields in the database in `{brackets}`. The default `search-format` is `{address}, {city}, {state}`, and the default `print-format` is `{address}`.
 
 Search Google using the `address` field and the knowledge that all our data is in Kalamazoo, Michigan:
 ````
@@ -122,25 +123,18 @@ everylot everylotkalamazoo ./kalamazoo.db --config ./bots.yaml --search-format '
 
 Search Google using an address broken-up into several fields:
 ````
-everylot everylotwallawalla walla2.db --config bots.yaml \
+$ everylot everylotwallawalla walla2.db --config bots.yaml \
     --search-format '{address_number} {street_direction} {street_name} {street_suffix}, Walla Walla, WA'
 ````
 
-In practice, you want to do the same thing when posting to Twitter, but you leave off the city and state because that's obvious to your followers:
+Leave off the city and state when tweeting because that's obvious to your followers:
 ````
-everylot everylotwallawalla walla2.db --config bots.yaml \
+$ everylot everylotwallawalla walla2.db --config bots.yaml \
     --search-format '{address_number} {street_direction} {street_name} {street_suffix}, Walla Walla, WA' \
     --print-format '{address_number} {street_direction} {street_name} {street_suffix}'
 ````
 
-Include the property ID in the tweet, in brackets:
-````
-everylot everylotkalamazoo kalamazoo.db --config bots.yaml --search-format '{address}, Kalamazoo, MI \
-    --print-format '{address} [{id}]'
-````
-
-While you're testing, it might be helpful to use the `--verbose` and `--dry-run` options. Also, use the `--id` option to force `everylot` to post a particular property.
-
+While testing, it might be helpful to use the `--verbose` and `--dry-run` options. Use the `--id` option to force `everylot` to post a particular property:
 ````
 everylot everylotpoughkeepsie pkpse.db --config bots.json --verbose --dry-run --id 12345
 ```
@@ -167,9 +161,9 @@ First step is to find the data: google "Baltimore open data", search for parcels
 
 ````bash
 # Also works to download through the browser and unzip with the GUI
-> curl -G https://data.baltimorecity.gov/api/geospatial/rb22-mgti \
+$ curl -G https://data.baltimorecity.gov/api/geospatial/rb22-mgti \
     -d method=export -d format=Shapefile -o baltimore.zip
-> unzip baltimore.zip
+$ unzip baltimore.zip
 Archive:  baltimore.zip
   inflating: geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.shp  
   inflating: geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.shx  
@@ -177,15 +171,15 @@ Archive:  baltimore.zip
   inflating: geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.prj
 
 # Get a simpler name
-> mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.shp baltimore.shp
-> mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.shx baltimore.shx
-> mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.dbf baltimore.dbf
+$ mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.shp baltimore.shp
+$ mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.shx baltimore.shx
+$ mv geo_export_9f6b494d-b617-4065-a8e7-23adb09350bc.dbf baltimore.dbf
 
 # Find the address and ID fields. It looks like we'll want to use a combination of
 # blocknum and parcelnum to get a unique ID for each property
-> ogrinfo baltimore.shp baltimore -so
-INFO: Open of `baltimore.shp'
-      using driver `ESRI Shapefile' successful.
+$ ogrinfo baltimore.shp baltimore -so
+INFO: Open of 'baltimore.shp'
+      using driver 'ESRI Shapefile' successful.
 ...
 parcelnum: String (254.0)
 ...
@@ -194,13 +188,13 @@ fulladdr: String (254.0)
 ...
 
 # Create an SQLite database, reprojecting the geometries to WGS84. Keep only the desired fields
-> ogr2ogr -f SQLite baltimore_raw.db baltimore.shp baltimore -t_srs EPSG:4326 
+$ ogr2ogr -f SQLite baltimore_raw.db baltimore.shp baltimore -t_srs EPSG:4326 
     -nln baltimore -select parcelnum,blocknum,fulladdr
 
 # Convert feature centroid to integer latitude, longitude
 # Pad the block number and parcel number so sorting works
 # Result will have these columns: id, address, lon, lat, tweeted
-> ogr2ogr -f SQLite baltimore.db baltimore_raw.db -nln lots -nlt NONE -dialect sqlite
+$ ogr2ogr -f SQLite baltimore.db baltimore_raw.db -nln lots -nlt NONE -dialect sqlite
     -sql "WITH A as (
         SELECT blocknum,
         parcelnum,
@@ -210,14 +204,12 @@ fulladdr: String (254.0)
         WHERE blocknum IS NOT NULL AND parcelnum IS NOT NULL
     ) SELECT (substr('00000' || blocknum, -5, 5)) || (substr('000000000' || parcelnum, -9, 9)) AS id,
     address,
-    ROUND(X(centroid), 5) lon,
-    ROUND(Y(centroid), 5) lat,
+    ROUND(X(centroid), 5) lon, ROUND(Y(centroid), 5) lat,
     0 tweeted
     FROM A;"
 
-# Add indexes and clean up sqlite database.
-> sqlite3 baltimore.db "CREATE INDEX i ON lots (id);"
-> sqlite3 baltimore.db "DELETE FROM lots WHERE id = '' OR id IS NULL; VACUUM"
+# Add an index
+$ sqlite3 baltimore.db "CREATE INDEX i ON lots (id);"
 
-> everylot everylotbaltimore baltimore.db --search-format "{address}, Baltimore, MD"
+$ everylot everylotbaltimore baltimore.db --search-format "{address}, Baltimore, MD"
 ````
