@@ -23,20 +23,20 @@ from .everylot import EveryLot
 
 def main():
     parser = argparse.ArgumentParser(description='every lot twitter bot')
-    parser.add_argument('user', type=str)
-    parser.add_argument('database', type=str)
-    parser.add_argument('--id', type=str, default=None)
-    parser.add_argument('-s', '--search-format', type=str, default=None,
+    parser.add_argument('screen_name', metavar='SCREEN_NAME', type=str, help='Twitter screen name (without @)')
+    parser.add_argument('database', metavar='DATABASE', type=str, help='path to SQLite lots database')
+    parser.add_argument('--id', type=str, default=None, help='tweet the entry in the lots table with this id')
+    parser.add_argument('-s', '--search-format', type=str, default=None, metavar='STRING',
                         help='Python format string use for searching Google')
-    parser.add_argument('-p', '--print-format', type=str, default=None,
+    parser.add_argument('-p', '--print-format', type=str, default=None, metavar='STRING',
                         help='Python format string use for poster to Twitter')
     tbu.args.add_default_args(parser, version=version, include=('config', 'dry-run', 'verbose', 'quiet'))
 
     args = parser.parse_args()
     api = tbu.api.API(args)
 
-    logger = logging.getLogger(args.user)
-    logger.debug('everylot starting with %s, %s', args.user, args.database)
+    logger = logging.getLogger(args.screen_name)
+    logger.debug('everylot starting with %s, %s', args.screen_name, args.database)
 
     el = EveryLot(args.database,
                   logger=logger,
