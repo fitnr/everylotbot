@@ -36,7 +36,7 @@ This file can be in `json` format, if you wish.
 
 ### Streetview key
 
-Visit the [Google Street View Image API](https://developers.google.com/maps/documentation/streetview/) page and click get a key.
+Visit the [Google Street View Image API](https://developers.google.com/maps/documentation/streetview/) page and click get a key. Make sure that your account and key have both street view and geocoding enabled.
 
 Once you have the key, save it on its own line in your `bots.yaml` file like so:
 ```yaml
