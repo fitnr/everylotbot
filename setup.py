@@ -5,9 +5,12 @@
 
 from setuptools import setup
 
+with open('everylot/__init__.py') as i:
+    version = next(r for r in i.readlines() if '__version__' in r).split('=')[1].strip('"\' \n')
+
 setup(
     name='everylot',
-    version='0.3.0',
+    version=version,
     description='everylot',
     long_description='''every lot''',
     keywords='',
