@@ -105,12 +105,11 @@ You'll now have a command available called `everylot`. It works like this:
 $ everylot SCREEN_NAME DATABASE.db --config bots.yaml
 ```
 
-This will look in `DATABASE.db` for a table called lots, then sort that table by `id` and grab the first untweeted row. 
-It will check where Google thinks this address is, and make sure it's close to the coordinates in the table. Then it wil use the address (or the coordinates, if they seem more reliable) to find a Streetview image, then post a tweet with this image to `SCREEN_NAME`'s timeline. It will need the authorization keys in `bots.yaml` to do all this stuff.
+This will look in `DATABASE.db` for a table called lots, then sort that table by `id` and grab the first untweeted row. The bot then checks where Google thinks this address is, and make sure it's close to the coordinates in the table. Then it wil use the address (or the coordinates, if they seem more reliable) to find a Streetview image, then post a tweet with this image to `SCREEN_NAME`'s timeline. It will need the authorization keys in `bots.yaml` to do all this stuff. After posting, the bots saves the ID of the tweet it made to the `tweeted` field of that row.
 
 `Everylot` will, by default, try to use `address`, `city` and `state` fields from the database to search Google, then post to Twitter just the `address` field.
 
-You can customize this based on the lay out of your database and the results you want. `everylot` has two options just for this:
+You can customize this based on the layout of your database and the results you want. `everylot` has two options just for this:
 * `--search-format` controls how address will be generated when searching Google
 * `--print-format` controls how the address will be printed in the tweet
 
@@ -127,7 +126,7 @@ $ everylot everylotwallawalla walla2.db --config bots.yaml \
     --search-format '{address_number} {street_direction} {street_name} {street_suffix}, Walla Walla, WA'
 ````
 
-Leave off the city and state when tweeting because that's obvious to your followers:
+You might leave off the city and state when tweeting because that's obvious to your followers:
 ````
 $ everylot everylotwallawalla walla2.db --config bots.yaml \
     --search-format '{address_number} {street_direction} {street_name} {street_suffix}, Walla Walla, WA' \

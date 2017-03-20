@@ -189,6 +189,6 @@ class EveryLot(object):
             "media_ids": [media_id_string]
         }
 
-    def mark_as_tweeted(self):
-        self.conn.execute("UPDATE lots SET tweeted = 1 WHERE id = ?", (self.lot['id'],))
+    def mark_as_tweeted(self, status_id):
+        self.conn.execute("UPDATE lots SET tweeted = ? WHERE id = ?", (status_id, self.lot['id'],))
         self.conn.commit()

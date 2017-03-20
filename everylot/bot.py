@@ -51,7 +51,8 @@ def main():
     logger.debug('%s addresss: %s zip: %s', el.lot['id'], el.lot.get('address'), el.lot.get('zip'))
     logger.debug('db location %s,%s', el.lot['lat'], el.lot['lon'])
 
-    # get the streetview image and upload it
+    # Get the streetview image and upload it
+    # ("sv.jpg" is a dummy value, since filename is a required parameter).
     image = el.get_streetview_image(api.config['streetview'])
     media = api.media_upload('sv.jpg', file=image)
 
@@ -62,9 +63,11 @@ def main():
 
     if not args.dry_run:
         logger.debug("posting")
-        api.update_status(**update)
-        el.mark_as_tweeted()
-
+        status = api.update_status(**update)
+        try:
+            el.mark_as_tweeted(status.id)
+        except AttributeError:
+            el.mark_as_tweeted('1')
 
 if __name__ == '__main__':
     main()

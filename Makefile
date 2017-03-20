@@ -10,7 +10,7 @@ CREATE_PLUTO = CREATE TABLE lots ( \
 	"floors" DOUBLE, \
 	"lon" DOUBLE, \
 	"lat" DOUBLE, \
-	"tweeted" VARCHAR(1) \
+	"tweeted" VARCHAR(16) \
 ); CREATE INDEX i ON lots (id);
 
 BOROUGHS = mn bx bk qn si
