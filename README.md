@@ -136,7 +136,7 @@ $ everylot everylotwallawalla walla2.db --config bots.yaml \
 While testing, it might be helpful to use the `--verbose` and `--dry-run` options. Use the `--id` option to force `everylot` to post a particular property:
 ````
 everylot everylotpoughkeepsie pkpse.db --config bots.json --verbose --dry-run --id 12345
-```
+````
 
 ### A place for your bot to live
 
