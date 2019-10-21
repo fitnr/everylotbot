@@ -14,7 +14,7 @@ Set up will be easier with at least a basic familiarity with the command line. A
 
 ### Twitter keys
 
-Creating a new Twitter account should be straightforward. To create a Twitter app, register at [apps.twitter.com/](http://apps.twitter.com/). Once you have an app, you'll need to register your account with the app. [Twitter has details](https://dev.twitter.com/oauth/overview/application-owner-access-tokens) on that process.
+Creating a new Twitter account should be straightforward. To create a Twitter app, register at [developer.twitter.com/apps](http://developer.twitter.com/apps). Once you have an app, you'll need to register your account with the app. [Twitter has details](https://dev.twitter.com/oauth/overview/application-owner-access-tokens) on that process.
 
 Once you have the keys, save them in a file called `bots.yaml` that looks like this:
 
@@ -56,7 +56,7 @@ Parcels_2015.dbf Parcels_2015.prj Parcels_2015.shp Parcels_2015.shx Parcels_2015
 
 While you're at it, make sure to download the metadata and carefully note the fields you'll want to track. At a minimum, you'll need an ID field and an address field. The address may be broken into several parts, that's fine. A field that tracts the number of floors would be nice, too.
 
-Now, you'll need to transform that Shapefile into an SQLite database. The database should have a table named `lots` with these fields: `id`, `lat`, `lon`, `tweeted` (the last should just be empty). You must also have some fields that represent the address, like `address`, `city` and `state`. Or, you might have `address_number`, `street_name` and `city`. Optionally, a `floors` field is useful for pointing the Streetview "camera". 
+Now, you'll need to transform that Shapefile into an SQLite database. The database should have a table named `lots` with these fields: `id`, `lat`, `lon`, `tweeted` (the last should be set to zero initially). You must also have some fields that represent the address, like `address`, `city` and `state`. Or, you might have `address_number`, `street_name` and `city`. Optionally, a `floors` field is useful for pointing the Streetview "camera". 
 
 (In the commands below, note that you don't have to type the "$", it's just there to mark the prompt where you enter the command.)
 
