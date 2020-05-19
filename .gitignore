@@ -17,3 +17,5 @@ dist
 *.shx
 *.dbf
 *.shp.xml
+
+bots.yaml
