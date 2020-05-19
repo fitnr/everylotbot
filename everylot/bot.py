@@ -23,8 +23,8 @@ from .everylot import EveryLot
 
 def main():
     parser = argparse.ArgumentParser(description='every lot twitter bot')
-    parser.add_argument('screen_name', metavar='SCREEN_NAME', type=str, help='Twitter screen name (without @)')
-    parser.add_argument('database', metavar='DATABASE', type=str, help='path to SQLite lots database')
+    parser.add_argument('screen_name', metavar='SCREEN_NAME', type=str, help='Twitter screen name (without @)', nargs='?', const=1, default='everylot_rva')
+    parser.add_argument('database', metavar='DATABASE', type=str, help='path to SQLite lots database', nargs='?', const=1, default='/home/taber/code/everylotbot-rva/rva.db')
     parser.add_argument('--id', type=str, default=None, help='tweet the entry in the lots table with this id')
     parser.add_argument('-s', '--search-format', type=str, default=None, metavar='STRING',
                         help='Python format string use for searching Google')

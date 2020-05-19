@@ -21,15 +21,17 @@ import logging
 from io import BytesIO
 import requests
 
+# using random rather than strict id order
 QUERY = """SELECT
     *
     FROM lots
-    where {} = ?
-    ORDER BY id ASC
+    where {} = ? AND tweeted = 0 
+    ORDER BY random() 
     LIMIT 1;
 """
 
 SVAPI = "https://maps.googleapis.com/maps/api/streetview"
+SVAPIMETADATA = "https://maps.googleapis.com/maps/api/streetview/metadata"
 GCAPI = "https://maps.googleapis.com/maps/api/geocode/json"
 
 
@@ -48,11 +50,11 @@ class EveryLot(object):
         self.logger = kwargs.get('logger', logging.getLogger('everylot'))
 
         # set address format for fetching from DB
-        self.search_format = search_format or '{address}, {city} {state}'
+        self.search_format = search_format or '{address}, Richmond VA'
         self.print_format = print_format or '{address}'
 
-        self.logger.debug('searching google sv with %s', self.search_format)
-        self.logger.debug('posting with %s', self.print_format)
+        self.logger.debug(f"searching google sv with {self.search_format}")
+        self.logger.debug(f"posting with {self.print_format}")
 
         self.conn = sqlite3.connect(database)
 
@@ -114,6 +116,18 @@ class EveryLot(object):
 
         sv.seek(0)
         return sv
+
+    def get_streetview_metadata(self, key):
+        # check if location returns no imagery from api
+        params = {
+            "location": self.streetviewable_location(key),
+            "key": key
+        }
+        r = requests.get(SVAPIMETADATA, params=params)
+        self.logger.debug(r.url)
+        md = r.json()
+        self.logger.debug(md)
+
 
     def streetviewable_location(self, key):
         '''
