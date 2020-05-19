@@ -9,13 +9,13 @@ with open('everylot/__init__.py') as i:
     version = next(r for r in i.readlines() if '__version__' in r).split('=')[1].strip('"\' \n')
 
 setup(
-    name='everylot',
+    name='everylot_rva',
     version=version,
     description='everylot',
-    long_description='''every lot''',
+    long_description='''every lot rva''',
     keywords='',
-    author='fitnr',
-    author_email='fitnr@fakeisthenewreal',
+    author='taber',
+    author_email='taber@taberbain.com',
     packages=['everylot'],
     license='GPL-3.0',
     include_package_data=False,
