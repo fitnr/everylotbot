@@ -20,6 +20,7 @@ import sqlite3
 import logging
 from io import BytesIO
 import requests
+import json
 
 # using random rather than strict id order
 QUERY = """SELECT
@@ -69,6 +70,7 @@ class EveryLot(object):
         keys = [c[0] for c in curs.description]
         self.lot = dict(zip(keys, curs.fetchone()))
 
+    # no floor count data yet for RVA, sidelining this for now
     def aim_camera(self):
         '''Set field-of-view and pitch'''
         fov, pitch = 65, 10
@@ -124,9 +126,11 @@ class EveryLot(object):
             "key": key
         }
         r = requests.get(SVAPIMETADATA, params=params)
-        self.logger.debug(r.url)
         md = r.json()
-        self.logger.debug(md)
+        if(md['status'] == 'OK'):
+            return md['pano_id']
+        else:
+            return False
 
 
     def streetviewable_location(self, key):

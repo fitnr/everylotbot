@@ -53,6 +53,7 @@ def main():
 
     # Get the streetview image and upload it
     # ("sv.jpg" is a dummy value, since filename is a required parameter).
+    metadata = el.get_streetview_metadata(api.config['streetview'])
     image = el.get_streetview_image(api.config['streetview'])
     media = api.media_upload('sv.jpg', file=image)
 
