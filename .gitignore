@@ -9,7 +9,6 @@ dist
 .eggs
 *.egg-info
 
-*.db
 *.zip
 *.cpg
 *.prj
