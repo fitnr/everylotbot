@@ -1,3 +1,0 @@
-everylot-rva==0.1.0
-requests==2.22.0
-twitter-bot-utils==0.12.0
