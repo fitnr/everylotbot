@@ -1,6 +1,8 @@
 # every lot bot / richmond va
 
-*everylotbot-rva* posts two Google Street View static API images every hour to [Twitter](https://twitter.com/everylotbot_rva).
+**everylotbot-rva** posts two Google Street View static API images every hour to [Twitter](https://twitter.com/everylotbot_rva).
+
+Parcel data is drawn from [City of Richmond GIS](http://richmondgov.com/GIS/) - the Parcels and Addresses files are smashed together and de-duped.
 
 ## every lot bot
 
