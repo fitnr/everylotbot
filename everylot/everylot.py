@@ -70,34 +70,7 @@ class EveryLot(object):
         keys = [c[0] for c in curs.description]
         self.lot = dict(zip(keys, curs.fetchone()))
 
-    # no floor count data yet for RVA, sidelining this for now
-    def aim_camera(self):
-        '''Set field-of-view and pitch'''
-        fov, pitch = 65, 10
-        try:
-            floors = float(self.lot.get('floors', 0)) or 2
-        except TypeError:
-            floors = 2
 
-        if floors == 3:
-            fov = 72
-
-        if floors == 4:
-            fov, pitch = 76, 15
-
-        if floors >= 5:
-            fov, pitch = 81, 20
-
-        if floors == 6:
-            fov = 86
-
-        if floors >= 8:
-            fov, pitch = 90, 25
-
-        if floors >= 10:
-            fov, pitch = 90, 30
-
-        return fov, pitch
 
     def get_streetview_image(self, key):
         '''Fetch image from streetview API'''
@@ -210,3 +183,36 @@ class EveryLot(object):
     def mark_as_tweeted(self, status_id):
         self.conn.execute("UPDATE lots SET tweeted = ? WHERE id = ?", (status_id, self.lot['id'],))
         self.conn.commit()
+
+    def mark_as_no_imagery(self):
+        self.conn.execute("UPDATE lots SET tweeted = 1 WHERE id = ?", (self.lot['id'],))
+        self.conn.commit()
+
+    # no floor count data yet for RVA, sidelining this for now
+    def aim_camera(self):
+        '''Set field-of-view and pitch'''
+        fov, pitch = 65, 10
+        try:
+            floors = float(self.lot.get('floors', 0)) or 2
+        except TypeError:
+            floors = 2
+
+        if floors == 3:
+            fov = 72
+
+        if floors == 4:
+            fov, pitch = 76, 15
+
+        if floors >= 5:
+            fov, pitch = 81, 20
+
+        if floors == 6:
+            fov = 86
+
+        if floors >= 8:
+            fov, pitch = 90, 25
+
+        if floors >= 10:
+            fov, pitch = 90, 30
+
+        return fov, pitch

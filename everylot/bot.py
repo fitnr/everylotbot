@@ -51,9 +51,19 @@ def main():
     logger.debug('%s addresss: %s zip: %s', el.lot['id'], el.lot.get('address'), el.lot.get('zip'))
     logger.debug('db location %s,%s', el.lot['lat'], el.lot['lon'])
 
+    # for now, if it doesn't have imagery, we're gonna just mark it in the db
+    # as "tweeted = 1" skip the process and give me
+    # a chance to troubleshoot!
+    
+    metadata = el.get_streetview_metadata(api.config['streetview'])
+    if not metadata:
+        logger.error("No imagery going on here :(")
+        el.mark_as_no_imagery()
+        return
+    
     # Get the streetview image and upload it
     # ("sv.jpg" is a dummy value, since filename is a required parameter).
-    metadata = el.get_streetview_metadata(api.config['streetview'])
+
     image = el.get_streetview_image(api.config['streetview'])
     media = api.media_upload('sv.jpg', file=image)
 
