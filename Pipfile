@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 everylot-rva = ">=0.1.0"
 requests = "*"
-twitter-bot-utils = ">=0.12.0"
+twitter-bot-utils = ">=0.11.5, <=0.12.0"
 
 [dev-packages]
 
