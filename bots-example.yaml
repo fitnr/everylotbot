@@ -1,5 +1,5 @@
 ---
-streetview: abc123...
+streetview: test_change
 
 apps:
     example_app_name:
