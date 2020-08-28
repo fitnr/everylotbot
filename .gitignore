@@ -18,6 +18,8 @@ dist
 *.dbf
 *.shp.xml
 
+.idea
+
 # secrets
 bots.yaml
 notes.md
