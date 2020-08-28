@@ -17,3 +17,7 @@ dist
 *.shx
 *.dbf
 *.shp.xml
+
+# secrets
+bots.yaml
+notes.md
