@@ -1,4 +1,4 @@
-#!/usr/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # This file is part of everylotbot
 # Copyright 2016 Neil Freeman
@@ -69,7 +69,7 @@ class EveryLot(object):
 
     def aim_camera(self):
         '''Set field-of-view and pitch'''
-        fov, pitch = 65, 10
+        fov, pitch = 69, 10
         try:
             floors = float(self.lot.get('floors', 0)) or 2
         except TypeError:
@@ -92,7 +92,9 @@ class EveryLot(object):
 
         if floors >= 10:
             fov, pitch = 90, 30
-
+        
+        if floors >= 99:
+            fov, pitch = 130, -15
         return fov, pitch
 
     def get_streetview_image(self, key):
