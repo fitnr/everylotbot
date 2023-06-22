@@ -19,6 +19,8 @@ import logging
 import twitter_bot_utils as tbu
 from . import __version__ as version
 from .everylot import EveryLot
+import tweepy
+from twitter_bot_utils.confighelper import configure
 
 
 def main():
@@ -34,6 +36,16 @@ def main():
 
     args = parser.parse_args()
     api = tbu.api.API(args)
+    
+    config = configure(args.screen_name)
+    consumer_key = config["consumer_key"]
+    consumer_secret = config["consumer_secret"]
+    access_token = config.get("token", config.get("key", config.get("oauth_token")))
+    access_token_secret = config.get("secret", config.get("oauth_secret"))
+    client = tweepy.Client(
+    consumer_key=consumer_key, consumer_secret=consumer_secret,
+    access_token=access_token, access_token_secret=access_token_secret
+)
 
     logger = logging.getLogger(args.screen_name)
     logger.debug('everylot starting with %s, %s', args.screen_name, args.database)
@@ -55,7 +67,7 @@ def main():
     # ("sv.jpg" is a dummy value, since filename is a required parameter).
     image = el.get_streetview_image(api.config['streetview'])
     media = api.media_upload('sv.jpg', file=image)
-
+ 
     # compose an update with all the good parameters
     # including the media string.
     update = el.compose(media.media_id_string)
@@ -63,9 +75,16 @@ def main():
 
     if not args.dry_run:
         logger.debug("posting")
-        status = api.update_status(**update)
+        response = client.create_tweet(
+            text=update['status'],
+            media_ids=[media.media_id_string]
+        )
+
+        # Extract the id from the response
+        tweet_id = response.data['id']
+
         try:
-            el.mark_as_tweeted(status.id)
+            el.mark_as_tweeted(tweet_id)
         except AttributeError:
             el.mark_as_tweeted('1')
 
