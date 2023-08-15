@@ -20,8 +20,10 @@ setup(
     license='GPL-3.0',
     include_package_data=False,
     install_requires=[
-        'twitter_bot_utils>=0.11.5,<=0.12',
+    'twitter_bot_utils>=0.11.5,<=0.14', # Updated to 0.14
+    'tweepy>=4.0.0'
     ],
+
     entry_points={
         'console_scripts': [
             'everylot=everylot.bot:main',

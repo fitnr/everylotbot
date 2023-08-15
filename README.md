@@ -1,3 +1,8 @@
+# Updated to use Twitter API v2 endpoint for sending the tweet.
+Now uses tweepy 4.0 and up.
+twitter bot utils 0.14
+
+
 # every lot bot
 
 This library supports a Twitter bot that posts Google Streetview pictures of every property in an SQLite database. 
